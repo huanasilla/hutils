@@ -29,16 +29,26 @@ class LoggerManager(Singleton):
     Logger Manager.
     Handles all logging files.
     """
-    def init(self, loggername='root', debug=True, stdout=True):
+    def init(self, loggername='root', **kwargs):
+        self.kwargs = kwargs
+        print('Initialize logger', loggername, kwargs)
         self.logger = logging.getLogger(loggername)
         rhandler = None
-        FILENAME = 'logs/%s_%s.log'%(loggername,datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-        LOG_FILENAME = os.path.join(os.getcwd(), FILENAME)
-        formatter = logging.Formatter(
-            fmt = '[%(asctime)s][%(filename)s:%(lineno)d][%(funcName)s][%(threadName)s][%(levelname)s]::%(message)s',
-            datefmt = '%F %H:%M:%S'
-        )
+        LOG_FILENAME = kwargs.get('filename', None)
+        if LOG_FILENAME is None:
+           FILENAME = 'logs/%s_%s.log'%(loggername,datetime.datetime.now().strftime("%Y%m%d_%H"))
+           LOG_FILENAME = os.path.join(os.getcwd(), FILENAME)
+        formatter = kwargs.get('formatter', None)
+        
+        if formatter is None:
+           formatter = logging.Formatter(
+               fmt = '[%(asctime)s][%(filename)s:%(lineno)d][%(funcName)s][%(threadName)s][%(levelname)s]::%(message)s',
+               datefmt = '%F %H:%M:%S'
+           )
 
+        debug = kwargs.get('debug', True)
+        stdout = kwargs.get('stdout', True)
+        print(debug, stdout)
         try:
             rhandler = RotatingFileHandler(
                     LOG_FILENAME,
@@ -86,10 +96,11 @@ class Logger(object):
     """
     Logger object.
     """
-    def __init__(self, loggername="root", debug=True, stdout=True):
-        self.lm = LoggerManager(loggername, debug) # LoggerManager instance
+    def __init__(self, loggername="root", **kwargs):
+        self.lm = LoggerManager(loggername,  **kwargs) # LoggerManager instance
         self.loggername = loggername # logger name
-
+        self.kwargs = kwargs
+    
     @property
     def logger(self):
         return self.lm.logger
