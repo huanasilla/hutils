@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 import datetime
 import configparser
 import json
-
+import time
 class Singleton(object):
     """
     Singleton interface:
@@ -48,7 +48,6 @@ class LoggerManager(Singleton):
 
         debug = kwargs.get('debug', True)
         stdout = kwargs.get('stdout', True)
-        print(debug, stdout)
         try:
             rhandler = RotatingFileHandler(
                     LOG_FILENAME,
@@ -128,21 +127,18 @@ class Logger(object):
 
 
 class TimeInspector(Singleton):
-    __metaclass__ = Singleton
     counter = 0
-    _distinct = None
-    
-    @staticmethod
-    def get_instance():
-        if TimeInspector._distinct is None:
-            ojb = TimeInspector()
-            TimeInspector._distinct = ojb
-        return TimeInspector._distinct
-        
-    def __init__(self):
+
+    def __init__(self, threshold=0.005, skip=False):
         self.data = {}
+        self._skip = skip
+        self.threshold = threshold
         #TimeInspector.counter += 1
-    
+
+    def set_skip(self):
+        'ignore cal time'
+        self._skip = True
+        
     def get_name(self, func):
         #print(repr(func), repr(func).split(" "))
         string = repr(func).split(" ")[1]
@@ -150,24 +146,26 @@ class TimeInspector(Singleton):
     
     
     def __repr__(self):
+        data = {}
+        for item in self.data.items():
+            key, val = item
+            if float(val['avg_time'].split('s')[0]) > self.threshold:
+               data[key] = val
+        data = json.dumps(self.data, indent=2)
+            
         return '<%s.%s object at %s>\n%s' % (
         self.__class__.__module__,
         self.__class__.__name__,
         hex(id(self)),
-    '\n'.join([repr(item) for item in self.data.items()]))
-    
-#     @classmethod
-#     def get_name(cls, func):
-#         string = repr(func).split(" ")[1]
-    
-#     @classmethod
-#     def get_info(cls):
-#         print(cls.data)
+        data)
     
     def init_dict(self):
-        return {'count':0, 'total_time': 0, 'avg_time': 0, 'avg_perloop': 0}
+        return {'count':0, 'total_time': 0, 'avg_time': 0}
     
     def __call__(self, func):
+        if self._skip:
+           return func
+ 
         def decorator(*args, **kwargs):
             func_name = self.get_name(func)
             data_dict = self.data.get(func_name, self.init_dict())
@@ -178,7 +176,7 @@ class TimeInspector(Singleton):
             data_dict['count'] += 1
             data_dict['total_time'] += duration
             data_dict['avg_time'] = '%.8f s'%(data_dict['total_time']/data_dict['count'])
-            data_dict['avg_perloop'] = data_dict['total_time']/1000
+            #data_dict['avg_perloop'] = data_dict['total_time']/1000
             self.data[func_name] = data_dict
             return result
         return decorator
