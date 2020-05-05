@@ -72,6 +72,7 @@ class LoggerManager(Singleton):
         rhandler.setFormatter(formatter)
         self.logger.addHandler(rhandler)
         self.logger.info('Start logging into : %s'%LOG_FILENAME)
+        self.logger.propagate = False
 
     def debug(self, loggername, msg):
         #self.logger = logging.getLogger(loggername)
