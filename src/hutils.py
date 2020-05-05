@@ -7,6 +7,7 @@ from logging.handlers import RotatingFileHandler
 import datetime
 import configparser
 import json
+
 class Singleton(object):
     """
     Singleton interface:
@@ -28,11 +29,16 @@ class LoggerManager(Singleton):
     Logger Manager.
     Handles all logging files.
     """
-    def init(self, loggername, debug=True):
+    def init(self, loggername='root', debug=True, stdout=True):
         self.logger = logging.getLogger(loggername)
         rhandler = None
         FILENAME = 'logs/%s_%s.log'%(loggername,datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
         LOG_FILENAME = os.path.join(os.getcwd(), FILENAME)
+        formatter = logging.Formatter(
+            fmt = '[%(asctime)s][%(filename)s:%(lineno)d][%(funcName)s][%(threadName)s][%(levelname)s]::%(message)s',
+            datefmt = '%F %H:%M:%S'
+        )
+
         try:
             rhandler = RotatingFileHandler(
                     LOG_FILENAME,
@@ -40,6 +46,10 @@ class LoggerManager(Singleton):
                     maxBytes = 10 * 1024 * 1024,
                     backupCount=5
                 )
+            if stdout:
+               stdout_handler = logging.StreamHandler(sys.stdout)
+               stdout_handler.setFormatter(formatter)
+               self.logger.addHandler(stdout_handler)
         except:
             print(IOError("Couldn't create/open file \"" + \
                           LOG_FILENAME + "\". Check permissions."))
@@ -47,11 +57,7 @@ class LoggerManager(Singleton):
 
         if debug:
             self.logger.setLevel(logging.DEBUG)
-        
-        formatter = logging.Formatter(
-            fmt = '[%(asctime)s] [%(filename)s:%(lineno)d] [%(levelname)-8s] %(message)s',
-            datefmt = '%F %H:%M:%S'
-        )
+
         rhandler.setFormatter(formatter)
         self.logger.addHandler(rhandler)
 
@@ -71,26 +77,44 @@ class LoggerManager(Singleton):
         self.logger = logging.getLogger(loggername)
         self.logger.warning(msg)
 
+    def set(self, loggername):
+        self.logger = logging.getLogger(loggername)
+        
+
 
 class Logger(object):
     """
     Logger object.
     """
-    def __init__(self, loggername="root", debug=True):
+    def __init__(self, loggername="root", debug=True, stdout=True):
         self.lm = LoggerManager(loggername, debug) # LoggerManager instance
         self.loggername = loggername # logger name
 
-    def debug(self, msg):
-        self.lm.debug(self.loggername, msg)
+    @property
+    def logger(self):
+        return self.lm.logger
 
-    def error(self, msg):
-        self.lm.error(self.loggername, msg)
+    @property
+    def debug(self):
+       self.lm.set(self.loggername)
+       return self.logger.debug
 
-    def info(self, msg):
-        self.lm.info(self.loggername, msg)
+    @property
+    def info(self):
+       self.lm.set(self.loggername)
+       return self.logger.info
 
-    def warning(self, msg):
-        self.lm.warning(self.loggername, msg)
+    @property
+    def error(self):
+       self.lm.set(self.loggername)
+       return self.logger.error
+
+    @property
+    def warning(self):
+       self.lm.set(self.loggername)
+       return self.logger.warning
+      
+
 
 class TimeInspector(Singleton):
     __metaclass__ = Singleton
