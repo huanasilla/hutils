@@ -31,7 +31,8 @@ class LoggerManager(Singleton):
     """
     def init(self, loggername='root', **kwargs):
         self.kwargs = kwargs
-        print('Initialize logger', loggername, kwargs)
+        self.loggername = loggername
+        #print('Initialize logger', loggername, kwargs)
         self.logger = logging.getLogger(loggername)
         rhandler = None
         LOG_FILENAME = kwargs.get('filename', None)
@@ -48,6 +49,7 @@ class LoggerManager(Singleton):
 
         debug = kwargs.get('debug', True)
         stdout = kwargs.get('stdout', True)
+        
         try:
             rhandler = RotatingFileHandler(
                     LOG_FILENAME,
@@ -69,25 +71,24 @@ class LoggerManager(Singleton):
 
         rhandler.setFormatter(formatter)
         self.logger.addHandler(rhandler)
+        self.logger.info('Start logging into : %s'%LOG_FILENAME)
 
     def debug(self, loggername, msg):
-        self.logger = logging.getLogger(loggername)
+        #self.logger = logging.getLogger(loggername)
         self.logger.debug(msg)
 
     def error(self, loggername, msg):
-        self.logger = logging.getLogger(loggername)
+        #self.logger = logging.getLogger(loggername)
         self.logger.error(msg)
 
     def info(self, loggername, msg):
-        self.logger = logging.getLogger(loggername)
+        #self.logger = logging.getLogger(loggername)
         self.logger.info(msg)
 
     def warning(self, loggername, msg):
-        self.logger = logging.getLogger(loggername)
+        #self.logger = logging.getLogger(loggername)
         self.logger.warning(msg)
 
-    def set(self, loggername):
-        self.logger = logging.getLogger(loggername)
         
 
 
@@ -99,6 +100,7 @@ class Logger(object):
         self.lm = LoggerManager(loggername,  **kwargs) # LoggerManager instance
         self.loggername = loggername # logger name
         self.kwargs = kwargs
+        self.info('Link logger "%s" into "%s"'%(self.loggername, self.lm.loggername))
     
     @property
     def logger(self):
@@ -106,22 +108,18 @@ class Logger(object):
 
     @property
     def debug(self):
-       self.lm.set(self.loggername)
        return self.logger.debug
 
     @property
     def info(self):
-       self.lm.set(self.loggername)
-       return self.logger.info
+        return self.logger.info
 
     @property
     def error(self):
-       self.lm.set(self.loggername)
        return self.logger.error
 
     @property
     def warning(self):
-       self.lm.set(self.loggername)
        return self.logger.warning
       
 
