@@ -1,20 +1,13 @@
 from setuptools import setup, find_packages
-setup(name='hutils',
-version='0.1',
-description='Help utilities - created by huanasilla',
+setup(name='asilla_utils',
+version='0.2',
+description='Help utilities - created by asilla',
 url='#',
-author='huan',
+author='anolla',
 author_email='huan@asilla.net',
 license='MIT',
-#keywords=['test','Logger','TimeInspector','Configuration'],
-#packages=['src'],
-py_modules=["hutils"],
+py_modules=["asilla_utils"],
 test_suite="test.suite",
 package_dir={'': 'src'},  # Optional
 packages=find_packages(where='src'),  # Required
-entry_points={  # Optional
-        'console_scripts': [
-            'hutils=hutils:main',
-        ],
-},
-zip_safe=False)
+zip_safe=True)

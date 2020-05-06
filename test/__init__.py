@@ -1,7 +1,7 @@
 from functools import partial
 import os
 import unittest
-from hutils import TimeInspector, Logger, Configuration, test
+from asilla_utils import *
 __all__ = ['suite']
 
 def suite():
